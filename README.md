@@ -33,7 +33,7 @@ or
 
 
 ```go
-package Main
+package main
 
 import (
 	"github.com/naota/godrbd"
