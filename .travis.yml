@@ -5,15 +5,16 @@ go:
   - tip
 
 python:
-  - "3.3"
+  - "3.4"
 
 install:
   - uname -a
   - lsb_release -a
   - sudo apt-get update
-  - sudo apt-get install python3
-  - which python3-pip
-  - python3-pip install git+https://github.com/g2p/vido.git@for-travis
+  - sudo apt-get -y install python3-pip
+  - python3 -V
+  - pip3 -V
+  - sudo pip3 install git+https://github.com/g2p/vido.git@for-travis
   - curl -LO https://media.githubusercontent.com/media/naota/kernel/master/uml-4.1.19/linux-4.1.19.xz
   - unxz linux-4.1.19.xz
   - chmod u+x linux-4.1.19
