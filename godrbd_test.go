@@ -36,7 +36,7 @@ func TestResource(t *testing.T) {
 	if err != nil {
 		foores.Down()
 		barres.Down()
-		t.Fatal("cannot list resources")
+		t.Fatalf("cannot list resources: %s", err)
 	}
 	if len(reses) != 2 || reses[0] != "foo" || reses[1] != "bar" {
 		foores.Down()
