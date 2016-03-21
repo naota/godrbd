@@ -10,7 +10,6 @@ python:
   - "3.4"
 
 install:
-  - pwd
   - uname -a
   - lsb_release -a
   - sudo apt-get update
@@ -23,5 +22,5 @@ install:
   - chmod u+x linux-4.1.19
 
 script:
-  - pwd
-  - vido --kernel ~/linux-4.1.19 -- bash .travis-test.sh
+  - ls -l
+  - vido --kernel ./linux-4.1.19 -- bash .travis-test.sh
