@@ -173,7 +173,8 @@ func NewResource(name string) (*Resource, error) {
 	r.minor = -1
 	r.volume = -1
 
-	err := exec.Command("drbdsetup", "new-resource", name).Run()
+	err := errorOut("drbdsetup new-resource",
+		"drbdsetup", "new-resource", name)
 	if err != nil {
 		return nil, err
 	}
