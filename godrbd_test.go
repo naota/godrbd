@@ -67,9 +67,12 @@ func TestResource(t *testing.T) {
 }
 
 func TestMinor(t *testing.T) {
-	foores := createMinor(t, "foo", 0, 0)
+	foores, err := createMinor(t, "foo", 0, 0)
+	if err != nil {
+		t.Fatal("TestMinor: ", err)
+	}
 
-	err := foores.DeleteMinor()
+	err = foores.DeleteMinor()
 
 	_, err = os.Stat("/dev/drbd0")
 	if err == nil {
@@ -80,10 +83,10 @@ func TestMinor(t *testing.T) {
 	foores.Down()
 }
 
-func createMinor(t *testing.T, name string, minor, vol int) *Resource {
+func createMinor(t *testing.T, name string, minor, vol int) (*Resource, error) {
 	res, err := NewResource(name)
 	if err != nil {
-		t.Fatalf("Failed to create %s %s", name, err)
+		return nil, fmt.Errorf("Failed to create %s: %s", name, err)
 	}
 
 	dev := fmt.Sprintf("/dev/drbd%d", minor)
@@ -91,22 +94,22 @@ func createMinor(t *testing.T, name string, minor, vol int) *Resource {
 	_, err = os.Stat(dev)
 	if err == nil {
 		res.Down()
-		t.Fatal(dev, " exists")
+		return nil, fmt.Errorf("%s exists", dev)
 	}
 
 	err = res.CreateMinor(minor, vol)
 	if err != nil {
 		res.Down()
-		t.Fatal("Failed to create minor", err)
+		return nil, fmt.Errorf("Failed to create minor: %s", err)
 	}
 
 	_, err = os.Stat(dev)
 	if err != nil {
 		res.Down()
-		t.Fatal(dev, " not created")
+		return nil, fmt.Errorf("%s not created", dev)
 	}
 
-	return res
+	return res, nil
 }
 
 func TestAttach(t *testing.T) {
@@ -289,7 +292,10 @@ func withResource(t *testing.T,
 	dataImg string, dataSize int64, metaImg string, metaSize int64,
 	f func(res *Resource, ddev, mdev string) error) error {
 
-	res := createMinor(t, name, minor, vol)
+	res, err := createMinor(t, name, minor, vol)
+	if err != nil {
+		return err
+	}
 
 	return withLoop(dataImg, dataSize,
 		func(dataDev string) error {
