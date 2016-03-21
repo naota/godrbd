@@ -1,7 +1,6 @@
 package drbd
 
 import (
-	"errors"
 	"fmt"
 	"os/exec"
 	"strconv"
@@ -59,7 +58,7 @@ func (r *Resource) MinorDev() string {
 func (r *Resource) Scan() error {
 	out, err := exec.Command("drbdsetup", "show", "all").CombinedOutput()
 	if err != nil {
-		return errors.New(fmt.Sprintf("drbdsetup show: %s\n%s", err, out))
+		return fmt.Errorf("drbdsetup show: %s\n%s", err, out)
 	}
 
 	var s scanner.Scanner
@@ -71,7 +70,7 @@ func (r *Resource) Scan() error {
 		case "volume", "minor":
 			tok = s.Scan()
 			if tok == scanner.EOF {
-				return errors.New("drbdsetup show: scanning failure")
+				return fmt.Errorf("drbdsetup show: scanning failure")
 			}
 
 			x, err := strconv.Atoi(s.TokenText())
@@ -156,7 +155,7 @@ func (r *Resource) SetSecondary() error {
 func errorOut(prefix, cmd string, args ...string) error {
 	out, err := exec.Command(cmd, args...).CombinedOutput()
 	if err != nil {
-		return errors.New(fmt.Sprintf("%s: %s\n%s", prefix, err, out))
+		return fmt.Errorf("%s: %s\n%s", prefix, err, out)
 	}
 	return nil
 }
@@ -190,7 +189,7 @@ func NewResource(name string) (*Resource, error) {
 func ListResources() ([]string, error) {
 	out, err := exec.Command("drbdsetup", "show", "all").CombinedOutput()
 	if err != nil {
-		return nil, errors.New(fmt.Sprintf("drbdsetup show: %s\n%s", err, out))
+		return nil, fmt.Errorf("drbdsetup show: %s\n%s", err, out)
 	}
 
 	reses := []string{}
@@ -203,7 +202,7 @@ func ListResources() ([]string, error) {
 		if s.TokenText() == "resource" {
 			tok = s.Scan()
 			if tok == scanner.EOF {
-				return nil, errors.New("drbdsetup show: scanning failure")
+				return nil, fmt.Errorf("drbdsetup show: scanning failure")
 			}
 			reses = append(reses, s.TokenText())
 		}
