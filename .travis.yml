@@ -23,4 +23,4 @@ install:
 
 script:
   - ls -l
-  - vido --pass-env GOROOT GOTOOLDIR GO15VENDOREXPERIMENT --kernel ./linux-4.1.19 -- bash .travis-test.sh
+  - sudo vido --pass-env GOROOT GOTOOLDIR GO15VENDOREXPERIMENT --kernel ./linux-4.1.19 -- bash .travis-test.sh
