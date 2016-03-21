@@ -237,55 +237,46 @@ realloc:
 }
 
 func TestConnect(t *testing.T) {
-	dataImgFoo := "test-data-foo.img"
-	metaImgFoo := "test-meta-foo.img"
 	size := int64(16) * 1024 * 1024 * 1024
-	dataImgBar := "test-data-bar.img"
-	metaImgBar := "test-meta-bar.img"
 
-	err := withResource(t, "foo", 0, 0, dataImgFoo, size, metaImgFoo, size,
-		func(foores *Resource, dataDevFoo, metaDevFoo string) error {
-			return withResource(t, "bar", 1, 0, dataImgBar, size, metaImgBar, size,
-				func(barres *Resource, dataDevBar, metaDevBar string) error {
-					err := foores.SetPrimary(true)
-					if err != nil {
-						foores.Down()
-						barres.Down()
-						return err
-					}
+	confFoo := new(ResourceConfig)
+	confFoo.name = "foo"
+	confFoo.minor = 0
+	confFoo.volume = 0
+	confFoo.dataImg = "test-data-foo.img"
+	confFoo.dataSize = size
+	confFoo.metaImg = "test-meta-foo.img"
+	confFoo.metaSize = size
+	confFoo.port = "ipv4:127.0.0.1:7788"
 
-					fooport := "ipv4:127.0.0.1:7788"
-					barport := "ipv4:127.0.0.1:7789"
-					err = foores.Connect(fooport, barport)
-					if err != nil {
-						foores.Down()
-						barres.Down()
-						return err
-					}
-					err = barres.Connect(barport, fooport)
-					if err != nil {
-						foores.Down()
-						barres.Down()
-						return err
-					}
+	confBar := new(ResourceConfig)
+	confBar.name = "bar"
+	confBar.minor = 1
+	confBar.volume = 0
+	confBar.dataImg = "test-data-bar.img"
+	confBar.dataSize = size
+	confBar.metaImg = "test-meta-bar.img"
+	confBar.metaSize = size
+	confBar.port = "ipv4:127.0.0.1:7789"
 
-					time.Sleep(1 * time.Second)
+	err := withConnection(t, confFoo, confBar,
+		func(foores, barres *Resource) error {
+			time.Sleep(1 * time.Second)
 
-					err = foores.Disconnect(fooport, barport)
-					if err != nil {
-						foores.Down()
-						barres.Down()
-						return err
-					}
-					err = barres.Disconnect(barport, fooport)
-					if err != nil {
-						foores.Down()
-						barres.Down()
-						return err
-					}
+			err := foores.Disconnect(confFoo.port, confBar.port)
+			if err != nil {
+				foores.Down()
+				barres.Down()
+				return err
+			}
+			err = barres.Disconnect(confBar.port, confFoo.port)
+			if err != nil {
+				foores.Down()
+				barres.Down()
+				return err
+			}
 
-					return nil
-				})
+			return nil
 		})
 	if err != nil {
 		t.Fatal("TestConnect failed", err)
@@ -323,6 +314,51 @@ func withResource(t *testing.T,
 
 					res.Down()
 					return nil
+				})
+		})
+}
+
+type ResourceConfig struct {
+	name     string
+	minor    int
+	volume   int
+	dataImg  string
+	dataSize int64
+	metaImg  string
+	metaSize int64
+	port     string
+}
+
+func withConnection(t *testing.T,
+	confX, confY *ResourceConfig,
+	f func(resX, resY *Resource) error) error {
+	return withResource(t, confX.name, confX.minor, confX.volume,
+		confX.dataImg, confX.dataSize, confX.metaImg, confX.metaSize,
+		func(resX *Resource, dataDevX, metaDevX string) error {
+			return withResource(t, confY.name, confY.minor, confY.volume,
+				confY.dataImg, confY.dataSize, confY.metaImg, confY.metaSize,
+				func(resY *Resource, dataDevY, metaDevY string) error {
+					err := resX.SetPrimary(true)
+					if err != nil {
+						resX.Down()
+						resY.Down()
+						return err
+					}
+
+					err = resX.Connect(confX.port, confY.port)
+					if err != nil {
+						resX.Down()
+						resY.Down()
+						return err
+					}
+					err = resY.Connect(confY.port, confX.port)
+					if err != nil {
+						resX.Down()
+						resY.Down()
+						return err
+					}
+
+					return f(resX, resY)
 				})
 		})
 }
