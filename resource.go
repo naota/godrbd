@@ -59,7 +59,7 @@ func (r *Resource) MinorDev() string {
 func (r *Resource) Scan() error {
 	out, err := exec.Command("drbdsetup", "show").CombinedOutput()
 	if err != nil {
-		return err
+		return errors.New(fmt.Sprintf("drbdsetup show: %s\n%s", err, out))
 	}
 
 	var s scanner.Scanner
