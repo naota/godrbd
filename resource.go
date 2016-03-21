@@ -188,9 +188,9 @@ func NewResource(name string) (*Resource, error) {
 }
 
 func ListResources() ([]string, error) {
-	out, err := exec.Command("drbdsetup", "show").CombinedOutput()
+	out, err := exec.Command("drbdsetup", "show", "all").CombinedOutput()
 	if err != nil {
-		return nil, err
+		return nil, errors.New(fmt.Sprintf("drbdsetup show: %s\n%s", err, out))
 	}
 
 	reses := []string{}
