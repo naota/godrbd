@@ -13,7 +13,7 @@ install:
   - uname -a
   - lsb_release -a
   - sudo apt-get update
-  - sudo apt-get -y install python3-pip
+  - sudo apt-get -y install python3-pip drbd8-utils
   - python3 -V
   - pip3 -V
   - sudo pip3 install git+https://github.com/g2p/vido.git@for-travis
