@@ -10,9 +10,12 @@ import (
 
 type Resource struct {
 	name    string
+	datadev string
 	metadev string
 	minor   int
 	volume  int
+	local   string
+	remote  string
 }
 
 func (r *Resource) Name() string {
@@ -104,6 +107,8 @@ func (r *Resource) Attach(datadev string, args ...string) error {
 		return err
 	}
 
+	r.datadev = datadev
+
 	return nil
 }
 
@@ -120,14 +125,20 @@ func (r *Resource) CreateMetaDev(metadev string) error {
 }
 
 func (r *Resource) Connect(local, remote string) error {
-	return errorOut("drbdsetup connect",
+	err := errorOut("drbdsetup connect",
 		"drbdsetup", "connect", r.name, local, remote,
 		"--protocol", "C", "--after-sb-0pri", "discard-zero-changes")
+	if err != nil {
+		return err
+	}
+	r.local = local
+	r.remote = remote
+	return nil
 }
 
-func (r *Resource) Disconnect(local, remote string) error {
+func (r *Resource) Disconnect() error {
 	return errorOut("drbdsetup disconnect",
-		"drbdsetup", "disconnect", local, remote)
+		"drbdsetup", "disconnect", r.local, r.remote)
 }
 
 func (r *Resource) Detach() error {

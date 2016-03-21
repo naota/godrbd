@@ -266,13 +266,13 @@ func TestConnect(t *testing.T) {
 		func(foores, barres *Resource) error {
 			time.Sleep(1 * time.Second)
 
-			err := foores.Disconnect(confFoo.port, confBar.port)
+			err := foores.Disconnect()
 			if err != nil {
 				foores.Down()
 				barres.Down()
 				return err
 			}
-			err = barres.Disconnect(confBar.port, confFoo.port)
+			err = barres.Disconnect()
 			if err != nil {
 				foores.Down()
 				barres.Down()
@@ -284,7 +284,6 @@ func TestConnect(t *testing.T) {
 	if err != nil {
 		t.Fatal("TestConnect failed", err)
 	}
-
 }
 
 func withResource(name string, minor, vol int,
@@ -365,4 +364,52 @@ func withConnection(confX, confY *ResourceConfig,
 					return f(resX, resY)
 				})
 		})
+}
+
+func TestSync(t *testing.T) {
+	size := int64(16) * 1024 * 1024 * 1024
+
+	confFoo := new(ResourceConfig)
+	confFoo.name = "foo"
+	confFoo.minor = 0
+	confFoo.volume = 0
+	confFoo.dataImg = "test-data-foo.img"
+	confFoo.dataSize = size
+	confFoo.metaImg = "test-meta-foo.img"
+	confFoo.metaSize = size
+	confFoo.port = "ipv4:127.0.0.1:7788"
+
+	confBar := new(ResourceConfig)
+	confBar.name = "bar"
+	confBar.minor = 1
+	confBar.volume = 0
+	confBar.dataImg = "test-data-bar.img"
+	confBar.dataSize = size
+	confBar.metaImg = "test-meta-bar.img"
+	confBar.metaSize = size
+	confBar.port = "ipv4:127.0.0.1:7789"
+
+	err := withConnection(confFoo, confBar,
+		func(foores, barres *Resource) error {
+
+			time.Sleep(100 * time.Second)
+
+			err := foores.Disconnect()
+			if err != nil {
+				foores.Down()
+				barres.Down()
+				return err
+			}
+			err = barres.Disconnect()
+			if err != nil {
+				foores.Down()
+				barres.Down()
+				return err
+			}
+
+			return nil
+		})
+	if err != nil {
+		t.Fatal("TestConnect failed", err)
+	}
 }
