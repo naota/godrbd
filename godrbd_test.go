@@ -67,7 +67,7 @@ func TestResource(t *testing.T) {
 }
 
 func TestMinor(t *testing.T) {
-	foores, err := createMinor(t, "foo", 0, 0)
+	foores, err := createMinor("foo", 0, 0)
 	if err != nil {
 		t.Fatal("TestMinor: ", err)
 	}
@@ -83,7 +83,7 @@ func TestMinor(t *testing.T) {
 	foores.Down()
 }
 
-func createMinor(t *testing.T, name string, minor, vol int) (*Resource, error) {
+func createMinor(name string, minor, vol int) (*Resource, error) {
 	res, err := NewResource(name)
 	if err != nil {
 		return nil, fmt.Errorf("Failed to create %s: %s", name, err)
@@ -117,7 +117,7 @@ func TestAttach(t *testing.T) {
 	dataImg := "test-attach-data.img"
 	metaImg := "test-attach-meta.img"
 	size := int64(16) * 1024 * 1024 * 1024
-	err := withResource(t, "foo", 0, 0, dataImg, size, metaImg, size,
+	err := withResource("foo", 0, 0, dataImg, size, metaImg, size,
 		func(foores *Resource, dataDev, metaDev string) error {
 			err := foores.SetPrimary(true)
 			if err != nil {
@@ -262,7 +262,7 @@ func TestConnect(t *testing.T) {
 	confBar.metaSize = size
 	confBar.port = "ipv4:127.0.0.1:7789"
 
-	err := withConnection(t, confFoo, confBar,
+	err := withConnection(confFoo, confBar,
 		func(foores, barres *Resource) error {
 			time.Sleep(1 * time.Second)
 
@@ -287,12 +287,11 @@ func TestConnect(t *testing.T) {
 
 }
 
-func withResource(t *testing.T,
-	name string, minor, vol int,
+func withResource(name string, minor, vol int,
 	dataImg string, dataSize int64, metaImg string, metaSize int64,
 	f func(res *Resource, ddev, mdev string) error) error {
 
-	res, err := createMinor(t, name, minor, vol)
+	res, err := createMinor(name, minor, vol)
 	if err != nil {
 		return err
 	}
@@ -335,13 +334,12 @@ type ResourceConfig struct {
 	port     string
 }
 
-func withConnection(t *testing.T,
-	confX, confY *ResourceConfig,
+func withConnection(confX, confY *ResourceConfig,
 	f func(resX, resY *Resource) error) error {
-	return withResource(t, confX.name, confX.minor, confX.volume,
+	return withResource(confX.name, confX.minor, confX.volume,
 		confX.dataImg, confX.dataSize, confX.metaImg, confX.metaSize,
 		func(resX *Resource, dataDevX, metaDevX string) error {
-			return withResource(t, confY.name, confY.minor, confY.volume,
+			return withResource(confY.name, confY.minor, confY.volume,
 				confY.dataImg, confY.dataSize, confY.metaImg, confY.metaSize,
 				func(resY *Resource, dataDevY, metaDevY string) error {
 					err := resX.SetPrimary(true)
